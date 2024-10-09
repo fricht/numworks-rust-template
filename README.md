@@ -4,8 +4,8 @@ A template with some tools to start creating your own rust [Numworks](https://ww
 
 ## Futur improvments
 
-- [ ] Add a way to compile the app into a .nma file, to share it.
-- [ ] Rewrite functions documentations, clean up code.
+- [ ] Add a way to compile the app into a .nwa file, to share it.
+- [ ] Rewrite functions documentation, clean up code.
 - [ ] Finish full trigonometric functions approximations, and improve existing ones (Taylor ?).
 - [ ] Write a complete panic handler.
 - [ ] Finish the `Color` struct implementations in `eadk.rs`.
