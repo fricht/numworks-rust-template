@@ -17,7 +17,7 @@ Just run `cargo run` with your calculator connected and that's it !
 > Doesn't require `npm` but can't create app icon
 
 Run `cargo build`, it will generate an app in `target/thumbv7em-none-eabihf/debug/`.
-You can install it (here)[https://my.numworks.com/apps].
+You can install it [here](https://my.numworks.com/apps).
 
 ## Futur improvments
 
