@@ -24,6 +24,18 @@ impl Buffer {
         }
     }
 
+    /// draws a rect from the list of colors with the color 'colorkey' not being drawn
+    pub fn push_rect_alpha(&mut self, rect: Rect, col: &[Color], colorkey: Color) {
+        for y in rect.y..(rect.y + rect.height) {
+            for x in rect.x..(rect.x + rect.width) {
+                let c = col[y as usize * rect.width as usize + x as usize];
+                if c.rgb565 != colorkey.rgb565 {
+                    self.set_at(x, y, col[y as usize * rect.width as usize + x as usize])
+                }
+            }
+        }
+    }
+
     /// draws a unicolor rect
     pub fn push_rect_uniform(&mut self, rect: Rect, col: Color) {
         for x in rect.x..(rect.x + rect.width) {
