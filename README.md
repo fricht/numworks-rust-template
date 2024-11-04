@@ -25,7 +25,7 @@ You can install it [here](https://my.numworks.com/apps).
 - [ ] Finish full trigonometric functions approximations, and improve existing ones (Taylor ?).
 - [ ] Write a complete panic handler.
 - [ ] Finish the `Color` struct implementations in `eadk.rs`.
-- [ ] Add a way to compile the app into a .nwa file, to share it.
+- [X] Add a way to compile the app into a .nwa file, to share it.
 
 Feel free to report issues or ask for new features.
 
