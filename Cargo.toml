@@ -3,6 +3,9 @@ name = "rust_app"
 version = "0.1.0"
 edition = "2021"
 
+[build-dependencies]
+nwi_compress = { path = "./nwi_compress"}
+
 [profile.dev]
 opt-level = 3
 debug = false
