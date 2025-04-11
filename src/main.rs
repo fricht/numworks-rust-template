@@ -10,8 +10,8 @@ static EADK_APP_NAME: [u8; 7] = *b"My app\0";
 /// Defines the icon of the application.
 #[used]
 #[unsafe(link_section = ".rodata.eadk_app_icon")]
-static EADK_APP_ICON: [u8; 4250] = [0; 4250]; // black square
-// static EADK_APP_ICON: [u8; _size_of_your_icon_] = *include_bytes!("../icon.nwi");
+// static EADK_APP_ICON: [u8; 4250] = [0; 4250]; // black square
+static EADK_APP_ICON: [u8; 6186] = *include_bytes!("../target/icon.nwi");
 
 /// The entry point of the application.
 ///
