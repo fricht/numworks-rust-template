@@ -15,3 +15,6 @@ overflow-checks = false
 opt-level = 3
 debug = false
 overflow-checks = false
+
+[dependencies]
+libnw = { version = "0.1.0", path = "libnw" }

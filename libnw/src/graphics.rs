@@ -1,6 +1,83 @@
-use crate::eadk::{display::*, Color, Rect};
-use crate::math::Vec2;
+use micromath::vector::Component;
+
+use crate::eadk::display::*;
+use crate::libmath::vector::Vector2d;
 use core::array;
+
+/////////////////////////////////////////////////
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Color {
+    pub rgb565: u16,
+}
+
+/// color utilities
+impl Color {
+    /// get red color component (5 bits)
+    pub fn get_red_raw(&self) -> u8 {
+        let r = ((self.rgb565 >> 8) & 0b11111000) as u8;
+        r | (r >> 5)
+    }
+
+    /// set red color component (5 bits)
+    pub fn set_red_raw(&mut self, red: u8) {
+        self.rgb565 = (self.rgb565 & 0b0000011111111111) | ((red as u16 & 0b11111000) << 8)
+    }
+
+    /// get green color component (6 bits)
+    pub fn get_green_raw(&self) -> u8 {
+        let g = ((self.rgb565 >> 3) & 0b11111100) as u8;
+        g | (g >> 6)
+    }
+
+    /// set green color component (6 bits)
+    pub fn set_green_raw(&mut self, green: u8) {
+        self.rgb565 = (self.rgb565 & 0b1111100000011111) | ((green as u16 & 0b11111100) << 3)
+    }
+
+    /// get blue color component (5 bits)
+    pub fn get_blue_raw(&self) -> u8 {
+        let b = ((self.rgb565 & 0b11111) << 3) as u8;
+        b | (b >> 5)
+    }
+
+    /// set blue color component (5 bits)
+    pub fn set_blue_raw(&mut self, blue: u8) {
+        self.rgb565 = (self.rgb565 & 0b1111111111100000) | (blue as u16 >> 3)
+    }
+
+    /// linearely interpolate 2 colors
+    pub fn lerp(self, target: Self, t: f32) -> Self {
+        unimplemented!();
+        // let mut c = Color { rgb565: 0 };
+        // c.set_red_raw(
+        //     (self.get_red_raw() as f32
+        //         + (target.get_red_raw() as f32 - self.get_red_raw() as f32) * t) as u16,
+        // );
+        // c.set_green_raw(
+        //     (self.get_green_raw() as f32
+        //         + (target.get_green_raw() as f32 - self.get_green_raw() as f32) * t)
+        //         as u16,
+        // );
+        // c.set_blue_raw(
+        //     (self.get_blue_raw() as f32
+        //         + (target.get_blue_raw() as f32 - self.get_blue_raw() as f32) * t)
+        //         as u16,
+        // );
+        // c
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Rect {
+    pub x: u16,
+    pub y: u16,
+    pub width: u16,
+    pub height: u16,
+}
+/////////////////////////////////////////
 
 /// Screen buffer to hold data before drawing it
 pub struct Buffer {
@@ -80,7 +157,7 @@ impl Buffer {
     }
 
     /// draws a line
-    pub fn line(&mut self, start: Vec2, end: Vec2, c: Color) {
+    pub fn line(&mut self, start: Vector2d, end: Vector2d, c: Color) {
         let min_x = f32::min(start.x, end.x);
         let max_x = f32::max(start.x, end.x);
         let min_y = f32::min(start.y, end.y);
@@ -113,9 +190,9 @@ impl Buffer {
     }
 
     /// draws a circle
-    pub fn circle(&mut self, center: Vec2, radius: f32, col: Color) {
+    pub fn circle<T: Component>(&mut self, center: Vector2d<T>, radius: T, col: Color) {
         let sqd = radius * radius;
-        for x in ((center.x - radius) as usize)..((center.x + radius) as usize + 1) {
+        for x in (center.x - radius)..((center.x + radius) + 1) {
             for y in ((center.y - radius) as usize)..((center.y + radius) as usize + 1) {
                 let dx = x as f32 - center.x;
                 let dy = y as f32 - center.y;

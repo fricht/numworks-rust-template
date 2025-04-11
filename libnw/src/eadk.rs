@@ -1,70 +1,4 @@
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct Color {
-    pub rgb565: u16,
-}
-
-/// color utilities
-impl Color {
-    /// get red color component (5 bits)
-    pub fn get_red_raw(&self) -> u16 {
-        (self.rgb565 >> 11) & 0b11111
-    }
-
-    /// set red color component (5 bits)
-    pub fn set_red_raw(&mut self, red: u16) {
-        self.rgb565 = (self.rgb565 & 0b0000011111111111) | ((red & 0b11111) << 11)
-    }
-
-    /// get green color component (6 bits)
-    pub fn get_green_raw(&self) -> u16 {
-        (self.rgb565 >> 5) & 0b111111
-    }
-
-    /// set green color component (6 bits)
-    pub fn set_green_raw(&mut self, green: u16) {
-        self.rgb565 = (self.rgb565 & 0b1111100000011111) | ((green & 0b111111) << 5)
-    }
-
-    /// get blue color component (5 bits)
-    pub fn get_blue_raw(&self) -> u16 {
-        self.rgb565 & 0b11111
-    }
-
-    /// set blue color component (5 bits)
-    pub fn set_blue_raw(&mut self, blue: u16) {
-        self.rgb565 = (self.rgb565 & 0b1111111111100000) | (blue & 0b11111)
-    }
-
-    /// linearely interpolate 2 colors
-    pub fn lerp(self, target: Self, t: f32) -> Self {
-        let mut c = Color { rgb565: 0 };
-        c.set_red_raw(
-            (self.get_red_raw() as f32
-                + (target.get_red_raw() as f32 - self.get_red_raw() as f32) * t) as u16,
-        );
-        c.set_green_raw(
-            (self.get_green_raw() as f32
-                + (target.get_green_raw() as f32 - self.get_green_raw() as f32) * t)
-                as u16,
-        );
-        c.set_blue_raw(
-            (self.get_blue_raw() as f32
-                + (target.get_blue_raw() as f32 - self.get_blue_raw() as f32) * t)
-                as u16,
-        );
-        c
-    }
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct Rect {
-    pub x: u16,
-    pub y: u16,
-    pub width: u16,
-    pub height: u16,
-}
+use crate::graphics::{Color, Rect};
 
 pub mod backlight {
     pub fn set_brightness(brightness: u8) {
@@ -404,6 +338,7 @@ use core::panic::PanicInfo;
 
 #[panic_handler]
 fn panic(_panic: &PanicInfo<'_>) -> ! {
+    // TODO : display crash infos
     display::push_rect_uniform(
         Rect {
             x: 0,

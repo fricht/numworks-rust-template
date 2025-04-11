@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+use libnw::libmath;
+
 pub mod eadk;
 pub mod graphics;
 pub mod math;
