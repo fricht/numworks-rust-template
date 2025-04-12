@@ -21,18 +21,20 @@ impl EadkColor {
     /// Each channel must be between 0 and 255, and is then converted
     /// so the 3 channels can fit in a u16 (some precision is lost).
     pub fn from_rgb(r: u8, g: u8, b: u8) -> Self {
-        let r = (r as f32 / 255. * 31.) as u16;
-        let g = (g as f32 / 255. * 63.) as u16;
-        let b = (b as f32 / 255. * 31.) as u16;
-        Self((r << 11) | (g << 5) | b)
+        let r = (r & 0b11111000) as u16;
+        let g = (g & 0b11111100) as u16;
+        let b = b as u16;
+        Self((r << 8) | (g << 3) | (b >> 3))
     }
 
     /// Separates the color into 3 channels (0 to 255).
     pub fn separate_channels(&self) -> (u8, u8, u8) {
-        let rgb565 = self.0;
-        let r = ((rgb565 >> 11 & 0x1F) as f32 / 31. * 255.) as u8;
-        let g = ((rgb565 >> 5 & 0x3F) as f32 / 63. * 255.) as u8;
-        let b = ((rgb565 & 0x1F) as f32 / 31. * 255.) as u8;
+        let mut r = ((self.0 >> 8) & 0b11111000) as u8;
+        r = r | (r >> 5);
+        let mut g = ((self.0 >> 3) & 0b11111100) as u8;
+        g = g | (g >> 6);
+        let mut b = ((self.0 & 0b11111) << 3) as u8;
+        b = b | (b >> 5);
         (r, g, b)
     }
 
@@ -80,8 +82,8 @@ impl EadkRect {
     }
 
     /// The number of pixels covered by the rectangle.
-    pub fn area(&self) -> u16 {
-        self.width * self.height
+    pub fn area(&self) -> u32 {
+        self.width as u32 * self.height as u32
     }
 
     /// Fills the rect on the screen with the given color.

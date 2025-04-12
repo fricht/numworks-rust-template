@@ -1,7 +1,0 @@
-[package]
-name = "libnw"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-micromath = { version = "2.1.0", features = ["vector"] }

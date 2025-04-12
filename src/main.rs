@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-#![feature(alloc_error_handler)]
+// #![feature(alloc_error_handler)]
 
 /// Defines the name of the application.
 #[used]
@@ -10,7 +10,6 @@ static EADK_APP_NAME: [u8; 7] = *b"My app\0";
 /// Defines the icon of the application.
 #[used]
 #[unsafe(link_section = ".rodata.eadk_app_icon")]
-// static EADK_APP_ICON: [u8; 4250] = [0; 4250]; // black square
 static EADK_APP_ICON: [u8; 6186] = *include_bytes!("../target/icon.nwi");
 
 /// The entry point of the application.
@@ -70,7 +69,7 @@ mod heap {
 mod no_std {
     extern crate alloc;
 
-    use alloc::format;
+    // use alloc::format;
     use numworks::display::{self, CHAR_HEIGHT, CHAR_WIDTH, Color, SCREEN_HEIGHT, SCREEN_WIDTH};
 
     /// This function is called when the application panics.
@@ -82,15 +81,15 @@ mod no_std {
         loop {}
     }
 
-    /// This function is called when an allocation error occur.
-    #[alloc_error_handler]
-    fn alloc_error_handler(layout: core::alloc::Layout) -> ! {
-        display::clear(Color::RED);
-        let size_needed = layout.size();
-        let error_msg = format!("Allocation error, {size_needed} bytes needed");
-        render_error(&error_msg);
-        loop {}
-    }
+    // /// This function is called when an allocation error occur.
+    // #[alloc_error_handler]
+    // fn alloc_error_handler(layout: core::alloc::Layout) -> ! {
+    //     display::clear(Color::RED);
+    //     let size_needed = layout.size();
+    //     let error_msg = format!("Allocation error, {size_needed} bytes needed");
+    //     render_error(&error_msg);
+    //     loop {}
+    // }
 
     fn render_error(message: &str) {
         display::draw_string(
