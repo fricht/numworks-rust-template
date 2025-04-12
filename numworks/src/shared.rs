@@ -93,6 +93,8 @@ impl EadkRect {
 
     /// Fills the rect on the screen with the given pixel colors.
     pub fn fill_with_buf(self, pixels: &[EadkColor]) {
+        // can we just return an Err and not draw the rect ?
+        // i think panicking is too much, isn't it ?
         assert!(self.area() as usize == pixels.len());
         display::push_rect(self, pixels);
     }
