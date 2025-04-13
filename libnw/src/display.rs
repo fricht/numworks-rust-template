@@ -243,9 +243,14 @@ pub mod eadk {
         text_color: Color,
         background_color: Color,
     ) {
-        let point = Point::new(x, y);
         unsafe {
-            eadk_display_draw_string(text, point, large_font, text_color, background_color);
+            eadk_display_draw_string(
+                text,
+                Point { x, y },
+                large_font,
+                text_color,
+                background_color,
+            );
         }
     }
 
@@ -267,14 +272,8 @@ pub mod eadk {
     ///
     /// This is only needed for the eadk_display_draw_string and should not be used elsewhere.
     #[repr(C)]
-    pub struct Point {
+    struct Point {
         pub x: u16,
         pub y: u16,
-    }
-
-    impl Point {
-        pub fn new(x: u16, y: u16) -> Self {
-            Self { x, y }
-        }
     }
 }
