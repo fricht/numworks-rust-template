@@ -1,19 +1,7 @@
 extern crate alloc;
+
 use alloc::format;
 use core::fmt::Display;
-
-/// Interface with the raw `eadk` C api.\
-/// If you don't know what you are doing, use the safe rust implementations.
-pub mod raw_api {
-    use super::Key;
-
-    unsafe extern "C" {
-        pub fn eadk_keyboard_scan() -> u64;
-        pub fn eadk_event_get(timeout: *mut i32) -> Key;
-    }
-}
-
-use raw_api::*;
 
 /// A hardware key
 #[repr(u8)]
@@ -242,35 +230,15 @@ impl Display for Key {
 
 /// The state of the keyboard (pressed keys)
 #[repr(C)]
-pub struct EadkKeyboardState(pub u64);
+pub struct KeyboardState(pub u64);
 
-/// Retrieves the current state of the keyboard.
-pub fn keyboard_scan() -> EadkKeyboardState {
-    unsafe { EadkKeyboardState(eadk_keyboard_scan()) }
-}
-
-/// Checks if the key was pressed in the given state.
-pub fn keyboard_key_down(keyboard_state: EadkKeyboardState, key: RawKey) -> bool {
-    (keyboard_state.0 >> (key as u8)) & 1 != 0
-}
-
-/// Waits until a key (or combination of keys) is pressed,
-/// or until `timeout` expires.
-///
-/// Only detects new key presses. Holding a key will not
-/// trigger multiple events if this function is called
-/// repeatedly while the key remains pressed.
-pub fn event_get(timeout: i32) -> Key {
-    // copy the value
-    let mut timeout = timeout;
-    unsafe { eadk_event_get(&mut timeout as *mut _) }
-}
+pub use eadk::scan;
 
 /// Waits for `timeout` or until a key is pressed.
 ///
 /// If the timeout is reached, returns `None`.
 pub fn wait_for_input(timeout_ms: i32) -> Option<Key> {
-    match event_get(timeout_ms) {
+    match eadk::event_get(timeout_ms) {
         Key::None => None,
         key => Some(key),
     }
@@ -278,12 +246,47 @@ pub fn wait_for_input(timeout_ms: i32) -> Option<Key> {
 
 /// Checks if the given key is pressed.
 pub fn is_pressed(key: RawKey) -> bool {
-    let keyboard_state = keyboard_scan();
-    keyboard_key_down(keyboard_state, key)
+    let keyboard_state = eadk::scan();
+    eadk::keyboard_key_down(keyboard_state, key)
 }
 
+/// Retrieves the currently pressed key.
+/// 
+/// This uses `eadk::event_get`, so it only detects new events.
 pub fn currently_pressed() -> Key {
-    event_get(1)
+    eadk::event_get(1)
 }
 
-pub use keyboard_scan as state;
+/// Interface with the raw `eadk` C api.
+///
+/// If you don't know what you are doing, use the safe rust implementations.
+pub mod eadk {
+    use super::{Key, KeyboardState, RawKey};
+
+    /// Retrieves the current state of the keyboard.
+    pub fn scan() -> KeyboardState {
+        unsafe { KeyboardState(eadk_keyboard_scan()) }
+    }
+
+    /// Waits until a key (or combination of keys) is pressed,
+    /// or until `timeout` expires.
+    ///
+    /// Only detects new key presses. Holding a key will not
+    /// trigger multiple events if this function is called
+    /// repeatedly while the key remains pressed.
+    pub fn event_get(timeout: i32) -> Key {
+        // copy the value
+        let mut timeout = timeout;
+        unsafe { eadk_event_get(&mut timeout as *mut _) }
+    }
+
+    /// Checks if the key was pressed in the given state.
+    pub fn keyboard_key_down(keyboard_state: KeyboardState, key: RawKey) -> bool {
+        (keyboard_state.0 >> (key as u8)) & 1 != 0
+    }
+
+    unsafe extern "C" {
+        fn eadk_keyboard_scan() -> u64;
+        fn eadk_event_get(timeout: *mut i32) -> Key;
+    }
+}
