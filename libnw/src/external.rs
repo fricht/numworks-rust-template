@@ -8,9 +8,11 @@ pub fn get_data() -> &'static [u8] {
 /// If you don't know what you are doing, use the safe rust implementations.
 pub mod eadk {
     unsafe extern "C" {
+        /// A pointer to the beginning of the external data slice.
         #[link_name = "eadk_external_data"]
         pub static data: *const u8;
 
+        /// The length of the external data slice.
         #[link_name = "eadk_external_data_size"]
         pub static data_size: usize;
     }

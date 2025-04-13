@@ -251,7 +251,7 @@ pub fn is_pressed(key: RawKey) -> bool {
 }
 
 /// Retrieves the currently pressed key.
-/// 
+///
 /// This uses `eadk::event_get`, so it only detects new events.
 pub fn currently_pressed() -> Key {
     eadk::event_get(1)
@@ -265,7 +265,7 @@ pub mod eadk {
 
     /// Retrieves the current state of the keyboard.
     pub fn scan() -> KeyboardState {
-        unsafe { KeyboardState(eadk_keyboard_scan()) }
+        KeyboardState(eadk_keyboard_scan())
     }
 
     /// Waits until a key (or combination of keys) is pressed,
@@ -277,7 +277,7 @@ pub mod eadk {
     pub fn event_get(timeout: i32) -> Key {
         // copy the value
         let mut timeout = timeout;
-        unsafe { eadk_event_get(&mut timeout as *mut _) }
+        eadk_event_get(&mut timeout as *mut _)
     }
 
     /// Checks if the key was pressed in the given state.
@@ -286,7 +286,7 @@ pub mod eadk {
     }
 
     unsafe extern "C" {
-        fn eadk_keyboard_scan() -> u64;
-        fn eadk_event_get(timeout: *mut i32) -> Key;
+        safe fn eadk_keyboard_scan() -> u64;
+        safe fn eadk_event_get(timeout: *mut i32) -> Key;
     }
 }
