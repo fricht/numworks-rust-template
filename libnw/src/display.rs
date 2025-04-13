@@ -62,7 +62,11 @@ impl Rect {
         // can we just return an Err and not draw the rect ?
         // i think panicking is too much, isn't it ?
         assert!(self.area() as usize == pixels.len());
-        eadk::push_rect(self, pixels);
+        unsafe {
+            // SAFETY: we assert that the `pixels` slice's length
+            // matches the area of the `self`.
+            eadk::push_rect(self, pixels.as_ptr());
+        };
     }
 
     /// Returns the pixels' color in the given rect.
@@ -138,11 +142,13 @@ pub fn get_rect(rect: Rect) -> Vec<Color> {
     let buffer_size = rect.area();
     let mut pixels = Vec::with_capacity(buffer_size as usize);
     unsafe {
+        // SAFETY: the `pixels` Vec is created with the same capacity as
+        // the area covered by `rect`.
         eadk::pull_rect(rect, pixels.as_mut_ptr());
-        // We need to manually adjust the vec length, otherwise
+        // SAFETY: we need to manually adjust the vec length, otherwise
         // vec.len() will return 0 even though it is fully filled.
         pixels.set_len(buffer_size as usize);
-    }
+    };
     pixels
 }
 
@@ -158,7 +164,7 @@ pub fn clear(color: Color) {
     eadk::push_rect_uniform(Rect::SCREEN, color);
 }
 
-/// Draws a string, ensuring it ends correctly
+/// Draws a string
 pub fn draw_string(
     string: &str,
     x: u16,
@@ -168,14 +174,17 @@ pub fn draw_string(
     background_color: Color,
 ) {
     let patched_string = terminate_str(string);
-    eadk::draw_string(
-        patched_string.as_ptr(),
-        x,
-        y,
-        large_font,
-        text_color,
-        background_color,
-    );
+    unsafe {
+        // SAFETY: a null byte is added if necessary with the `terminate_str` function above.
+        eadk::draw_string(
+            patched_string.as_ptr(),
+            x,
+            y,
+            large_font,
+            text_color,
+            background_color,
+        )
+    };
 }
 
 /// Adds a null byte at the end of an str if needed.
@@ -196,46 +205,10 @@ fn terminate_str(s: &str) -> Cow<'_, str> {
 pub mod eadk {
     use super::{Color, Rect};
 
-    /// Pushes a slice of colors onto the screen.
-    ///
-    /// It is your responsibility to ensure that the rect and the slice's length match.
-    ///
-    /// The screen is filled from left to right then top to bottom.
-    pub fn push_rect(rect: Rect, pixels: &[Color]) {
-        unsafe {
-            eadk_display_push_rect(rect, pixels.as_ptr());
-        }
-    }
-
-    /// Draws a rect with the given color.
-    pub fn push_rect_uniform(rect: Rect, color: Color) {
-        unsafe {
-            eadk_display_push_rect_uniform(rect, color);
-        }
-    }
-
-    /// Pull pixels from the screen into a slice of colors.
-    ///
-    /// It is your responsibility to ensure that the rect and the slice's length match.
-    ///
-    /// The screen is filled from left to right then top to bottom.
-    pub fn pull_rect(rect: Rect, pixels: *mut Color) {
-        unsafe {
-            eadk_display_pull_rect(rect, pixels);
-        }
-    }
-
-    /// Waits for the screen to finish refreshing.
-    pub fn wait_for_vblank() {
-        unsafe {
-            eadk_display_wait_for_vblank();
-        }
-    }
-
     /// Draws a str to the screen.
     ///
     /// It is your responsibility to end the str with a null byte.
-    pub fn draw_string(
+    pub unsafe fn draw_string(
         text: *const u8,
         x: u16,
         y: u16,
@@ -251,14 +224,10 @@ pub mod eadk {
                 text_color,
                 background_color,
             );
-        }
+        };
     }
 
     unsafe extern "C" {
-        fn eadk_display_push_rect(rect: Rect, pixels: *const Color);
-        fn eadk_display_push_rect_uniform(rect: Rect, color: Color);
-        fn eadk_display_pull_rect(rect: Rect, pixels: *mut Color);
-        fn eadk_display_wait_for_vblank() -> bool;
         fn eadk_display_draw_string(
             text: *const u8,
             point: Point,
@@ -266,6 +235,30 @@ pub mod eadk {
             text_color: Color,
             background_color: Color,
         );
+
+        /// Pushes a slice of colors onto the screen.
+        ///
+        /// It is your responsibility to ensure that the rect and the slice's length match.
+        ///
+        /// The screen is filled from left to right then top to bottom.
+        #[link_name = "eadk_display_push_rect"]
+        pub fn push_rect(rect: Rect, pixels: *const Color);
+
+        /// Pull pixels from the screen into a slice of colors.
+        ///
+        /// It is your responsibility to ensure that the rect and the slice's length match.
+        ///
+        /// The screen is filled from left to right then top to bottom.
+        #[link_name = "eadk_display_pull_rect"]
+        pub fn pull_rect(rect: Rect, pixels: *mut Color);
+
+        /// Draws a rect with the given color.
+        #[link_name = "eadk_display_push_rect_uniform"]
+        pub safe fn push_rect_uniform(rect: Rect, color: Color);
+
+        /// Waits for the screen to finish refreshing.
+        #[link_name = "eadk_display_wait_for_vblank"]
+        pub safe fn wait_for_vblank() -> bool;
     }
 
     /// A point on the screen.

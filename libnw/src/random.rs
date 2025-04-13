@@ -11,7 +11,11 @@ pub fn randuint(a: u32, b: u32) -> u32 {
 
 /// Returns a random color
 pub fn random_color() -> Color {
-    Color::from_rgb(eadk::random() as u8, eadk::random() as u8, eadk::random() as u8)
+    Color::from_rgb(
+        eadk::random() as u8,
+        eadk::random() as u8,
+        eadk::random() as u8,
+    )
 }
 
 /// Returns a random rect.
@@ -28,12 +32,9 @@ pub fn random_rect() -> Rect {
 ///
 /// If you don't know what you are doing, use the safe rust implementations.
 pub mod eadk {
-    /// Returns a random u32.
-    pub fn random() -> u32 {
-        unsafe { eadk_random() }
-    }
-
     unsafe extern "C" {
-        fn eadk_random() -> u32;
+        /// Returns a random u32.
+        #[link_name = "eadk_random"]
+        pub safe fn random() -> u32;
     }
 }
