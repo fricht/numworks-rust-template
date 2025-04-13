@@ -4,8 +4,7 @@
 #[unsafe(link_section = ".rodata.eadk_api_level")]
 static EADK_API_LEVEL: u32 = 0;
 
-mod eadk;
-mod shared;
+mod usb;
 
 /// Interface with the battery.
 pub mod battery;
@@ -35,4 +34,4 @@ pub mod keyboard;
 pub mod external;
 
 // rename because why not
-pub use eadk::usb_is_plugged as is_usb_plugged;
+pub use usb::usb_is_plugged as is_usb_plugged;

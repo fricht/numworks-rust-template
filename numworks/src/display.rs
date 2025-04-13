@@ -1,7 +1,74 @@
 extern crate alloc;
 
-pub use crate::shared::EadkRect;
 use alloc::{borrow::Cow, string::String, vec::Vec};
+
+/// A rectangle on the screen.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Rect {
+    pub x: u16,
+    pub y: u16,
+    pub width: u16,
+    pub height: u16,
+}
+
+impl Rect {
+    pub fn new(x: u16, y: u16, width: u16, height: u16) -> Self {
+        Self {
+            x,
+            y,
+            width,
+            height,
+        }
+    }
+
+    /// Creates a square
+    pub fn new_square(x: u16, y: u16, width: u16) -> Self {
+        Self::new(x, y, width, width)
+    }
+
+    /// Creates a square with side-length 1, i.e a pixel.
+    pub fn new_pixel(x: u16, y: u16) -> Self {
+        Self::new(x, y, 1, 1)
+    }
+
+    /// The number of pixels covered by the rectangle.
+    pub fn area(&self) -> u32 {
+        self.width as u32 * self.height as u32
+    }
+
+    /// Fills the rect on the screen with the given color.
+    pub fn fill(self, color: Color) {
+        push_rect_uniform(self, color);
+    }
+
+    /// Fills the rect on the screen with the given pixel colors.
+    pub fn fill_with_buf(self, pixels: &[Color]) {
+        // can we just return an Err and not draw the rect ?
+        // i think panicking is too much, isn't it ?
+        assert!(self.area() as usize == pixels.len());
+        push_rect(self, pixels);
+    }
+
+    /// Returns the pixels' color in the given rect.
+    pub fn get_pixels(self) -> Vec<Color> {
+        get_rect(self)
+    }
+
+    /// Centers the rectangle on the screen
+    pub fn center(&mut self) {
+        self.x = (SCREEN_WIDTH - self.width) / 2;
+        self.y = (SCREEN_HEIGHT - self.height) / 2;
+    }
+
+    /// The rectangle the size of the screen.
+    pub const SCREEN: Self = Self {
+        x: 0,
+        y: 0,
+        width: SCREEN_WIDTH,
+        height: SCREEN_HEIGHT,
+    };
+}
 
 /// An RGB 5-6-5 color: 5 bits for red, 6 bits for green and 5 bits for blue.
 #[repr(transparent)]
@@ -65,9 +132,9 @@ pub const LARGE_CHAR_WIDTH: u16 = 10;
 pub const LARGE_CHAR_HEIGHT: u16 = 16;
 
 unsafe extern "C" {
-    fn eadk_display_push_rect(rect: EadkRect, pixels: *const Color);
-    fn eadk_display_push_rect_uniform(rect: EadkRect, color: Color);
-    fn eadk_display_pull_rect(rect: EadkRect, pixels: *mut Color);
+    fn eadk_display_push_rect(rect: Rect, pixels: *const Color);
+    fn eadk_display_push_rect_uniform(rect: Rect, color: Color);
+    fn eadk_display_pull_rect(rect: Rect, pixels: *mut Color);
     fn eadk_display_wait_for_vblank() -> bool;
     fn eadk_display_draw_string(
         text: *const u8,
@@ -98,14 +165,14 @@ impl EadkPoint {
 /// It is your responsibility to ensure that the rect and the slice's length match.
 ///
 /// The screen is filled from left to right then top to bottom.
-pub fn push_rect(rect: EadkRect, pixels: &[Color]) {
+pub fn push_rect(rect: Rect, pixels: &[Color]) {
     unsafe {
         eadk_display_push_rect(rect, pixels.as_ptr());
     }
 }
 
 /// Draws a rect with the given color.
-pub fn push_rect_uniform(rect: EadkRect, color: Color) {
+pub fn push_rect_uniform(rect: Rect, color: Color) {
     unsafe {
         eadk_display_push_rect_uniform(rect, color);
     }
@@ -122,7 +189,7 @@ pub fn wait_for_vblank() {
 /// Returns the pixels' color in the given rect.
 ///
 /// The screen is read from left to right then top to bottom.
-pub fn get_rect(rect: EadkRect) -> Vec<Color> {
+pub fn get_rect(rect: Rect) -> Vec<Color> {
     let buffer_size = rect.area();
     let mut pixels = Vec::with_capacity(buffer_size as usize);
     unsafe {
@@ -135,15 +202,15 @@ pub fn get_rect(rect: EadkRect) -> Vec<Color> {
 }
 
 pub fn get_pixel(x: u16, y: u16) -> Color {
-    get_rect(EadkRect::new_pixel(x, y))[0]
+    get_rect(Rect::new_pixel(x, y))[0]
 }
 
 pub fn set_pixel(x: u16, y: u16, color: Color) {
-    push_rect_uniform(EadkRect::new_pixel(x, y), color);
+    push_rect_uniform(Rect::new_pixel(x, y), color);
 }
 
 pub fn clear(color: Color) {
-    push_rect_uniform(EadkRect::SCREEN, color);
+    push_rect_uniform(Rect::SCREEN, color);
 }
 
 /// Draws a str to the screen.
