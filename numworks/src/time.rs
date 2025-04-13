@@ -1,8 +1,14 @@
-unsafe extern "C" {
-    fn eadk_timing_msleep(ms: u32);
-    fn eadk_timing_usleep(us: u32);
-    fn eadk_timing_millis() -> u64;
+/// Interface with the raw `eadk` C api.\
+/// If you don't know what you are doing, use the safe rust implementations.
+pub mod raw_api {
+    unsafe extern "C" {
+        pub fn eadk_timing_msleep(ms: u32);
+        pub fn eadk_timing_usleep(us: u32);
+        pub fn eadk_timing_millis() -> u64;
+    }
 }
+
+use raw_api::*;
 
 /// Blocks the thread for a given amount of milliseconds.
 pub fn msleep(ms: u32) {

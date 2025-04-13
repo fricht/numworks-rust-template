@@ -1,7 +1,13 @@
-unsafe extern "C" {
-    fn eadk_backlight_set_brightness(brightness: u8);
-    fn eadk_backlight_brightness() -> u8;
+/// Interface with the raw `eadk` C api.\
+/// If you don't know what you are doing, use the safe rust implementations.
+pub mod raw_api {
+    unsafe extern "C" {
+        pub fn eadk_backlight_set_brightness(brightness: u8);
+        pub fn eadk_backlight_brightness() -> u8;
+    }
 }
+
+use raw_api::*;
 
 /// Sets the screen brightness.
 pub fn set_brightness(brightness: u8) {

@@ -1,6 +1,42 @@
 extern crate alloc;
-
 use alloc::{borrow::Cow, string::String, vec::Vec};
+
+/// Interface with the raw `eadk` C api.\
+/// If you don't know what you are doing, use the safe rust implementations.
+pub mod raw_api {
+    use super::{Color, Point, Rect};
+
+    unsafe extern "C" {
+        pub fn eadk_display_push_rect(rect: Rect, pixels: *const Color);
+        pub fn eadk_display_push_rect_uniform(rect: Rect, color: Color);
+        pub fn eadk_display_pull_rect(rect: Rect, pixels: *mut Color);
+        pub fn eadk_display_wait_for_vblank() -> bool;
+        pub fn eadk_display_draw_string(
+            text: *const u8,
+            point: Point,
+            large_font: bool,
+            text_color: Color,
+            background_color: Color,
+        );
+    }
+}
+
+use raw_api::*;
+
+/// The width of the screen in pixels.
+pub const SCREEN_WIDTH: u16 = 320;
+/// The height of the screen in pixels.
+pub const SCREEN_HEIGHT: u16 = 240;
+/// The number of pixels on the screen.
+pub const SCREEN_AREA: usize = SCREEN_WIDTH as usize * SCREEN_HEIGHT as usize;
+/// The width of one char of the standard font in pixels.
+pub const CHAR_WIDTH: u16 = 7;
+/// The height of one char of the standard font in pixels.
+pub const CHAR_HEIGHT: u16 = 14;
+/// The width of one char of the large font in pixels.
+pub const LARGE_CHAR_WIDTH: u16 = 10;
+/// The height of one char of the large font in pixels.
+pub const LARGE_CHAR_HEIGHT: u16 = 16;
 
 /// A rectangle on the screen.
 #[repr(C)]
@@ -116,45 +152,16 @@ impl Color {
     pub const BLUE: Self = Self(0x1F);
 }
 
-/// The width of the screen in pixels.
-pub const SCREEN_WIDTH: u16 = 320;
-/// The height of the screen in pixels.
-pub const SCREEN_HEIGHT: u16 = 240;
-/// The number of pixels on the screen.
-pub const SCREEN_AREA: usize = SCREEN_WIDTH as usize * SCREEN_HEIGHT as usize;
-/// The width of one char of the standard font in pixels.
-pub const CHAR_WIDTH: u16 = 7;
-/// The height of one char of the standard font in pixels.
-pub const CHAR_HEIGHT: u16 = 14;
-/// The width of one char of the large font in pixels.
-pub const LARGE_CHAR_WIDTH: u16 = 10;
-/// The height of one char of the large font in pixels.
-pub const LARGE_CHAR_HEIGHT: u16 = 16;
-
-unsafe extern "C" {
-    fn eadk_display_push_rect(rect: Rect, pixels: *const Color);
-    fn eadk_display_push_rect_uniform(rect: Rect, color: Color);
-    fn eadk_display_pull_rect(rect: Rect, pixels: *mut Color);
-    fn eadk_display_wait_for_vblank() -> bool;
-    fn eadk_display_draw_string(
-        text: *const u8,
-        point: EadkPoint,
-        large_font: bool,
-        text_color: Color,
-        background_color: Color,
-    );
-}
-
 /// A point on the screen.
 ///
 /// This is only needed for the eadk_display_draw_string and should not be used elsewhere.
 #[repr(C)]
-pub struct EadkPoint {
+pub struct Point {
     pub x: u16,
     pub y: u16,
 }
 
-impl EadkPoint {
+impl Point {
     pub fn new(x: u16, y: u16) -> Self {
         Self { x, y }
     }
@@ -224,7 +231,7 @@ pub fn draw_raw_string(
     text_color: Color,
     background_color: Color,
 ) {
-    let point = EadkPoint::new(x, y);
+    let point = Point::new(x, y);
     unsafe {
         eadk_display_draw_string(text, point, large_font, text_color, background_color);
     }

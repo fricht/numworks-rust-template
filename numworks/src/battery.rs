@@ -1,8 +1,14 @@
-unsafe extern "C" {
-    fn eadk_battery_is_charging() -> bool;
-    fn eadk_battery_level() -> u8;
-    fn eadk_battery_voltage() -> f32;
+/// Interface with the raw `eadk` C api.\
+/// If you don't know what you are doing, use the safe rust implementations.
+pub mod raw_api {
+    unsafe extern "C" {
+        pub fn eadk_battery_is_charging() -> bool;
+        pub fn eadk_battery_level() -> u8;
+        pub fn eadk_battery_voltage() -> f32;
+    }
 }
+
+use raw_api::*;
 
 /// Checks if the battery is in charge.
 ///

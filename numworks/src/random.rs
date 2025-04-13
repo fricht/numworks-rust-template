@@ -1,8 +1,14 @@
 use crate::display::{Color, Rect, SCREEN_HEIGHT, SCREEN_WIDTH};
 
-unsafe extern "C" {
-    fn eadk_random() -> u32;
+/// Interface with the raw `eadk` C api.\
+/// If you don't know what you are doing, use the safe rust implementations.
+pub mod raw_api {
+    unsafe extern "C" {
+        pub fn eadk_random() -> u32;
+    }
 }
+
+use raw_api::*;
 
 /// Returns a random u32.
 pub fn random() -> u32 {

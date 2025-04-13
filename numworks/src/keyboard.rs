@@ -2,10 +2,18 @@ extern crate alloc;
 use alloc::format;
 use core::fmt::Display;
 
-unsafe extern "C" {
-    fn eadk_keyboard_scan() -> u64;
-    fn eadk_event_get(timeout: *mut i32) -> Key;
+/// Interface with the raw `eadk` C api.\
+/// If you don't know what you are doing, use the safe rust implementations.
+pub mod raw_api {
+    use super::Key;
+
+    unsafe extern "C" {
+        pub fn eadk_keyboard_scan() -> u64;
+        pub fn eadk_event_get(timeout: *mut i32) -> Key;
+    }
 }
+
+use raw_api::*;
 
 /// A hardware key
 #[repr(u8)]

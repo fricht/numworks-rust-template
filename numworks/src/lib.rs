@@ -4,7 +4,8 @@
 #[unsafe(link_section = ".rodata.eadk_api_level")]
 static EADK_API_LEVEL: u32 = 0;
 
-mod usb;
+/// Interface with the usb state.
+pub mod usb;
 
 /// Interface with the battery.
 pub mod battery;
@@ -26,12 +27,8 @@ pub mod time;
 /// brightness values.
 pub mod backlight;
 
-/// Interfaces with the keyboard, retrieve raw state and
-/// wait for keypress.
+/// Interfaces with the keyboard, retrieve raw state and wait for keypress.
 pub mod keyboard;
 
 /// Access the external data of the app.
 pub mod external;
-
-// rename because why not
-pub use usb::usb_is_plugged as is_usb_plugged;
