@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-// #![feature(alloc_error_handler)]
+#![feature(alloc_error_handler)]
 
 /// Defines the name of the application.
 #[used]
@@ -69,35 +69,38 @@ mod heap {
 mod no_std {
     extern crate alloc;
 
-    // use alloc::format;
-    use numworks::display::{self, CHAR_HEIGHT, CHAR_WIDTH, Color, SCREEN_HEIGHT, SCREEN_WIDTH};
+    use alloc::format;
+    use numworks::display::{
+        self, CHAR_HEIGHT, CHAR_WIDTH, EadkColor, SCREEN_HEIGHT, SCREEN_WIDTH,
+    };
 
     /// This function is called when the application panics.
     #[panic_handler]
     fn panic(panic: &core::panic::PanicInfo<'_>) -> ! {
-        display::clear(Color::RED);
+        display::clear(EadkColor::RED);
         let error_msg = panic.message().as_str().unwrap_or("No panic message");
         render_error(error_msg);
         loop {}
     }
 
-    // /// This function is called when an allocation error occur.
-    // #[alloc_error_handler]
-    // fn alloc_error_handler(layout: core::alloc::Layout) -> ! {
-    //     display::clear(Color::RED);
-    //     let size_needed = layout.size();
-    //     let error_msg = format!("Allocation error, {size_needed} bytes needed");
-    //     render_error(&error_msg);
-    //     loop {}
-    // }
+    /// This function is called when an allocation error occur.
+    #[alloc_error_handler]
+    fn alloc_error_handler(layout: core::alloc::Layout) -> ! {
+        display::clear(EadkColor::RED);
+        let size_needed = layout.size();
+        let error_msg = format!("Allocation error, {size_needed} bytes needed");
+        render_error(&error_msg);
+        loop {}
+    }
 
     fn render_error(message: &str) {
         display::draw_string(
             message,
             SCREEN_WIDTH / 2 - message.len() as u16 * CHAR_WIDTH / 2,
             SCREEN_HEIGHT / 2 - CHAR_HEIGHT / 2,
-            Color::RED,
-            Color::WHITE,
+            false,
+            EadkColor::RED,
+            EadkColor::WHITE,
         );
     }
 }

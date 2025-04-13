@@ -1,4 +1,4 @@
-use crate::display::{Color, SCREEN_HEIGHT, SCREEN_WIDTH, ScreenRect};
+use crate::display::{EadkColor, EadkRect, SCREEN_HEIGHT, SCREEN_WIDTH};
 
 unsafe extern "C" {
     fn eadk_random() -> u32;
@@ -17,16 +17,16 @@ pub fn randuint(a: u32, b: u32) -> u32 {
 }
 
 /// Returns a random color
-pub fn random_color() -> Color {
-    Color::from_rgb(random() as u8, random() as u8, random() as u8)
+pub fn random_color() -> EadkColor {
+    EadkColor::from_rgb(random() as u8, random() as u8, random() as u8)
 }
 
 /// Returns a random rect.
 /// The rect is fully contained in screen.
-pub fn random_rect() -> ScreenRect {
+pub fn random_rect() -> EadkRect {
     let x = randuint(0, SCREEN_WIDTH as u32) as u16;
     let y = randuint(0, SCREEN_HEIGHT as u32) as u16;
     let width = randuint(0, (SCREEN_WIDTH - x) as u32) as u16;
     let height = randuint(0, (SCREEN_HEIGHT - y) as u32) as u16;
-    ScreenRect::new(x, y, width, height)
+    EadkRect::new(x, y, width, height)
 }
