@@ -3,7 +3,7 @@ name = "myapp"
 edition = "2024"
 
 [build-dependencies]
-nwi_compress = { path = "./nwi_compress" }
+nwi_compress = { path = "nwi_compress" }
 
 [profile.dev]
 opt-level = 3
@@ -18,7 +18,7 @@ overflow-checks = false
 [dependencies]
 embedded-alloc = "0.6.0"
 libm = "0.2.11"
-libnw = { path = "./libnw" }
+libnw = { path = "libnw" }
 
 # Misc
 

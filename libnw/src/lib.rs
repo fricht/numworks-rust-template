@@ -4,6 +4,8 @@
 #[unsafe(link_section = ".rodata.eadk_api_level")]
 static EADK_API_LEVEL: u32 = 0;
 
+mod heap;
+
 /// Interface with the usb state.
 pub mod usb;
 
