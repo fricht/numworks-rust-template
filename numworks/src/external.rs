@@ -4,6 +4,6 @@ unsafe extern "C" {
 }
 
 /// Retrieves the buffer containing the external data needed by this app.
-pub fn external_data() -> &'static [u8] {
+pub fn get_data() -> &'static [u8] {
     unsafe { core::slice::from_raw_parts(eadk_external_data, eadk_external_data_size) }
 }

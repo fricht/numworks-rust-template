@@ -7,23 +7,23 @@ unsafe extern "C" {
 /// Checks if the battery is in charge.
 ///
 /// The link process will fail if the calculator is not compatible.
-/// You also may need to increase the EADK_API_LEVEL for this to work.
-pub fn is_battery_charging() -> bool {
+/// You may also need to increase the EADK_API_LEVEL for this to work.
+pub fn is_charging() -> bool {
     unsafe { eadk_battery_is_charging() }
 }
 
 /// Returns the battery level.
 ///
 /// The link process will fail if the calculator is not compatible.
-/// You also may need to increase the EADK_API_LEVEL for this to work.
-pub fn battery_level() -> u8 {
+/// You may also need to increase the EADK_API_LEVEL for this to work.
+pub fn get_level() -> u8 {
     unsafe { eadk_battery_level() }
 }
 
 /// Returns the battery voltage.
 ///
 /// The link process will fail if the calculator is not compatible.
-/// You also may need to increase the EADK_API_LEVEL for this to work.
-pub fn battery_voltage() -> f32 {
+/// You may also need to increase the EADK_API_LEVEL for this to work.
+pub fn get_voltage() -> f32 {
     unsafe { eadk_battery_voltage() }
 }
