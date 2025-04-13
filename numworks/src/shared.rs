@@ -2,54 +2,8 @@ extern crate alloc;
 
 use core::fmt::Display;
 
-use crate::display::{self, SCREEN_HEIGHT, SCREEN_WIDTH};
+use crate::display::{self, Color, SCREEN_HEIGHT, SCREEN_WIDTH};
 use alloc::{format, vec::Vec};
-
-/// An RGB 5-6-5 color: 5 bits for red, 6 bits for green and 5 bits for blue.
-#[repr(transparent)]
-#[derive(Clone, Copy)]
-pub struct EadkColor(u16);
-
-impl EadkColor {
-    /// Creates a color directly from a u16.
-    pub fn new(rgb565: u16) -> Self {
-        Self(rgb565)
-    }
-
-    /// Creates a color from distincts red, green and blue channels.
-    ///
-    /// Each channel must be between 0 and 255, and is then converted
-    /// so the 3 channels can fit in a u16 (some precision is lost).
-    pub fn from_rgb(r: u8, g: u8, b: u8) -> Self {
-        let r = (r & 0b11111000) as u16;
-        let g = (g & 0b11111100) as u16;
-        let b = b as u16;
-        Self((r << 8) | (g << 3) | (b >> 3))
-    }
-
-    /// Separates the color into 3 channels (0 to 255).
-    pub fn separate_channels(&self) -> (u8, u8, u8) {
-        let mut r = ((self.0 >> 8) & 0b11111000) as u8;
-        r = r | (r >> 5);
-        let mut g = ((self.0 >> 3) & 0b11111100) as u8;
-        g = g | (g >> 6);
-        let mut b = ((self.0 & 0b11111) << 3) as u8;
-        b = b | (b >> 5);
-        (r, g, b)
-    }
-
-    // Basic colors
-    /// Pure black (0, 0, 0)
-    pub const BLACK: Self = Self(0x0);
-    /// Pure white (255, 255, 255)
-    pub const WHITE: Self = Self(0xFFFF);
-    /// Pure red (255, 0, 0)
-    pub const RED: Self = Self(0xF800);
-    /// Pure green (0, 255, 0)
-    pub const GREEN: Self = Self(0x7E0);
-    /// Pure blue (0, 0, 255)
-    pub const BLUE: Self = Self(0x1F);
-}
 
 /// A rectangle on the screen.
 #[repr(C)]
@@ -87,12 +41,12 @@ impl EadkRect {
     }
 
     /// Fills the rect on the screen with the given color.
-    pub fn fill(self, color: EadkColor) {
+    pub fn fill(self, color: Color) {
         display::push_rect_uniform(self, color);
     }
 
     /// Fills the rect on the screen with the given pixel colors.
-    pub fn fill_with_buf(self, pixels: &[EadkColor]) {
+    pub fn fill_with_buf(self, pixels: &[Color]) {
         // can we just return an Err and not draw the rect ?
         // i think panicking is too much, isn't it ?
         assert!(self.area() as usize == pixels.len());
@@ -100,7 +54,7 @@ impl EadkRect {
     }
 
     /// Returns the pixels' color in the given rect.
-    pub fn get_pixels(self) -> Vec<EadkColor> {
+    pub fn get_pixels(self) -> Vec<Color> {
         display::get_rect(self)
     }
 

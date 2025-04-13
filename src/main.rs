@@ -71,13 +71,13 @@ mod no_std {
 
     use alloc::format;
     use numworks::display::{
-        self, CHAR_HEIGHT, CHAR_WIDTH, EadkColor, SCREEN_HEIGHT, SCREEN_WIDTH,
+        self, CHAR_HEIGHT, CHAR_WIDTH, Color, SCREEN_HEIGHT, SCREEN_WIDTH,
     };
 
     /// This function is called when the application panics.
     #[panic_handler]
     fn panic(panic: &core::panic::PanicInfo<'_>) -> ! {
-        display::clear(EadkColor::RED);
+        display::clear(Color::RED);
         let error_msg = panic.message().as_str().unwrap_or("No panic message");
         render_error(error_msg);
         loop {}
@@ -86,7 +86,7 @@ mod no_std {
     /// This function is called when an allocation error occur.
     #[alloc_error_handler]
     fn alloc_error_handler(layout: core::alloc::Layout) -> ! {
-        display::clear(EadkColor::RED);
+        display::clear(Color::RED);
         let size_needed = layout.size();
         let error_msg = format!("Allocation error, {size_needed} bytes needed");
         render_error(&error_msg);
@@ -99,8 +99,8 @@ mod no_std {
             SCREEN_WIDTH / 2 - message.len() as u16 * CHAR_WIDTH / 2,
             SCREEN_HEIGHT / 2 - CHAR_HEIGHT / 2,
             false,
-            EadkColor::RED,
-            EadkColor::WHITE,
+            Color::RED,
+            Color::WHITE,
         );
     }
 }

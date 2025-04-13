@@ -1,4 +1,4 @@
-use crate::display::{EadkColor, EadkRect, SCREEN_HEIGHT, SCREEN_WIDTH};
+use crate::display::{Color, EadkRect, SCREEN_HEIGHT, SCREEN_WIDTH};
 
 unsafe extern "C" {
     fn eadk_random() -> u32;
@@ -17,8 +17,8 @@ pub fn randuint(a: u32, b: u32) -> u32 {
 }
 
 /// Returns a random color
-pub fn random_color() -> EadkColor {
-    EadkColor::from_rgb(random() as u8, random() as u8, random() as u8)
+pub fn random_color() -> Color {
+    Color::from_rgb(random() as u8, random() as u8, random() as u8)
 }
 
 /// Returns a random rect.
