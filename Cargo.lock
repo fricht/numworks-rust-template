@@ -438,6 +438,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8355be11b20d696c8f18f6cc018c4e372165b1fa8126cef092399c9951984ffa"
 
 [[package]]
+name = "libnw"
+version = "0.0.0"
+
+[[package]]
 name = "linked_list_allocator"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -496,7 +500,7 @@ version = "0.0.0"
 dependencies = [
  "embedded-alloc",
  "libm",
- "numworks",
+ "libnw",
  "nwi_compress",
 ]
 
@@ -571,10 +575,6 @@ checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
 ]
-
-[[package]]
-name = "numworks"
-version = "0.0.0"
 
 [[package]]
 name = "nwi_compress"

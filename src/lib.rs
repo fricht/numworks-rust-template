@@ -1,8 +1,6 @@
 #![no_std]
 
-use numworks::display::{
-    self, CHAR_HEIGHT, Color, LARGE_CHAR_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH,
-};
+use libnw::display::{self, CHAR_HEIGHT, Color, LARGE_CHAR_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH};
 
 /// The core of the application logic
 pub fn main() {

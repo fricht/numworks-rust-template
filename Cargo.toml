@@ -18,7 +18,7 @@ overflow-checks = false
 [dependencies]
 embedded-alloc = "0.6.0"
 libm = "0.2.11"
-numworks = { path = "numworks" }
+libnw = { path = "./libnw" }
 
 # Misc
 

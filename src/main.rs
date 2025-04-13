@@ -70,9 +70,7 @@ mod no_std {
     extern crate alloc;
 
     use alloc::format;
-    use numworks::display::{
-        self, CHAR_HEIGHT, CHAR_WIDTH, Color, SCREEN_HEIGHT, SCREEN_WIDTH,
-    };
+    use libnw::display::{self, CHAR_HEIGHT, CHAR_WIDTH, Color, SCREEN_HEIGHT, SCREEN_WIDTH};
 
     /// This function is called when the application panics.
     #[panic_handler]
