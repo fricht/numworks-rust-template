@@ -14,18 +14,12 @@ You need to have `npm` install with the [nwlink](https://www.npmjs.com/package/n
 Just run `cargo run` with your calculator connected and that's it !
 
 ### Method 2
-> Doesn't require `npm` but can't create app icon
+> Doesn't require `npm`
 
-Run `cargo build`, it will generate an app in `target/thumbv7em-none-eabihf/debug/`.
-You can install it [here](https://my.numworks.com/apps).
+Run `cargo build`, it will generate an app in `./target/thumbv7em-none-eabihf/debug/`.
+Note that the generated file won't add any extension. You can manually add `.nwa` to make it prettier.
+Then you can install it on your calculator [here](https://my.numworks.com/apps).
 
-## Futur improvments
-
-- [ ] Rewrite functions documentation, clean up code.
-- [ ] Finish full trigonometric functions approximations, and improve existing ones (Taylor ?).
-- [ ] Write a complete panic handler.
-- [ ] Finish the `Color` struct implementations in `eadk.rs`.
-- [ ] Add a way to compile the app into a .nwa file, to share it.
 
 Feel free to report issues or ask for new features.
 
