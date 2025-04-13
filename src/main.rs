@@ -2,7 +2,6 @@
 #![no_main]
 #![feature(alloc_error_handler)]
 
-use libnw;
 use myapp::{self, ExitBehaviour};
 
 /// Defines the name of the application.
@@ -31,9 +30,8 @@ fn main() {
     while let ExitBehaviour::Restart = behaviour {
         behaviour = myapp::main();
     }
-    match behaviour {
-        ExitBehaviour::Hang => loop {},
-        _ => (),
+    if let ExitBehaviour::Hang = behaviour {
+        loop {}
     }
 }
 
