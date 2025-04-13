@@ -2,8 +2,15 @@
 
 use libnw::display::{self, CHAR_HEIGHT, Color, LARGE_CHAR_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH};
 
+/// How to handle the end of the main app.
+pub enum ExitBehaviour {
+    Exit,
+    Hang,
+    Restart,
+}
+
 /// The core of the application logic
-pub fn main() {
+pub fn main() -> ExitBehaviour {
     const MESSAGE: &str = "Hey !!";
     display::clear(Color::GREEN);
     display::draw_string(
@@ -14,4 +21,5 @@ pub fn main() {
         Color::BLACK,
         Color::WHITE,
     );
+    ExitBehaviour::Hang
 }
