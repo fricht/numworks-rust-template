@@ -1,0 +1,7 @@
+[package]
+name = "libnw"
+description = "lib as in libre. libnw is an implementation of numworks' eadk api in rust."
+edition = "2024"
+
+[dependencies]
+embedded-alloc = "0.6.0"

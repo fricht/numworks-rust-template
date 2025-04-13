@@ -1,0 +1,6 @@
+[package]
+name = "nwi_compress"
+edition = "2024"
+
+[dependencies]
+image = "0.25.6"

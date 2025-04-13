@@ -1,14 +1,34 @@
 [package]
-name = "rust_app"
-version = "0.1.0"
-edition = "2021"
+name = "myapp"
+edition = "2024"
+
+[build-dependencies]
+nwi_compress = { path = "nwi_compress" }
 
 [profile.dev]
 opt-level = 3
 debug = false
-overflow-checks = false
+overflow-checks = true
 
 [profile.release]
 opt-level = 3
 debug = false
 overflow-checks = false
+
+[dependencies]
+embedded-alloc = "0.6.0"
+libm = "0.2.11"
+libnw = { path = "libnw" }
+
+# Misc
+
+[[bin]]
+name = "myapp"
+# removes the "can't find crate for `test`" error on the "#![no_std]" line
+test = false
+bench = false
+
+[lib]
+# removes the "can't find crate for `test`" error on the "#![no_std]" line
+test = false
+bench = false
