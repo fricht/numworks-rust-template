@@ -1,27 +1,6 @@
 extern crate alloc;
+
 use alloc::{borrow::Cow, string::String, vec::Vec};
-
-/// Interface with the raw `eadk` C api.\
-/// If you don't know what you are doing, use the safe rust implementations.
-pub mod raw_api {
-    use super::{Color, Point, Rect};
-
-    unsafe extern "C" {
-        pub fn eadk_display_push_rect(rect: Rect, pixels: *const Color);
-        pub fn eadk_display_push_rect_uniform(rect: Rect, color: Color);
-        pub fn eadk_display_pull_rect(rect: Rect, pixels: *mut Color);
-        pub fn eadk_display_wait_for_vblank() -> bool;
-        pub fn eadk_display_draw_string(
-            text: *const u8,
-            point: Point,
-            large_font: bool,
-            text_color: Color,
-            background_color: Color,
-        );
-    }
-}
-
-use raw_api::*;
 
 /// The width of the screen in pixels.
 pub const SCREEN_WIDTH: u16 = 320;
@@ -75,7 +54,7 @@ impl Rect {
 
     /// Fills the rect on the screen with the given color.
     pub fn fill(self, color: Color) {
-        push_rect_uniform(self, color);
+        eadk::push_rect_uniform(self, color);
     }
 
     /// Fills the rect on the screen with the given pixel colors.
@@ -83,7 +62,7 @@ impl Rect {
         // can we just return an Err and not draw the rect ?
         // i think panicking is too much, isn't it ?
         assert!(self.area() as usize == pixels.len());
-        push_rect(self, pixels);
+        eadk::push_rect(self, pixels);
     }
 
     /// Returns the pixels' color in the given rect.
@@ -152,47 +131,6 @@ impl Color {
     pub const BLUE: Self = Self(0x1F);
 }
 
-/// A point on the screen.
-///
-/// This is only needed for the eadk_display_draw_string and should not be used elsewhere.
-#[repr(C)]
-pub struct Point {
-    pub x: u16,
-    pub y: u16,
-}
-
-impl Point {
-    pub fn new(x: u16, y: u16) -> Self {
-        Self { x, y }
-    }
-}
-
-/// Pushes a slice of colors onto the screen.
-///
-/// It is your responsibility to ensure that the rect and the slice's length match.
-///
-/// The screen is filled from left to right then top to bottom.
-pub fn push_rect(rect: Rect, pixels: &[Color]) {
-    unsafe {
-        eadk_display_push_rect(rect, pixels.as_ptr());
-    }
-}
-
-/// Draws a rect with the given color.
-pub fn push_rect_uniform(rect: Rect, color: Color) {
-    unsafe {
-        eadk_display_push_rect_uniform(rect, color);
-    }
-}
-
-/// Waits for the screen to finish refreshing.
-pub fn wait_for_vblank() {
-    unsafe {
-        eadk_display_wait_for_vblank();
-    }
-}
-
-// Is the more than minimal wrapping around the unsafe C functions ?
 /// Returns the pixels' color in the given rect.
 ///
 /// The screen is read from left to right then top to bottom.
@@ -200,7 +138,7 @@ pub fn get_rect(rect: Rect) -> Vec<Color> {
     let buffer_size = rect.area();
     let mut pixels = Vec::with_capacity(buffer_size as usize);
     unsafe {
-        eadk_display_pull_rect(rect, pixels.as_mut_ptr());
+        eadk::pull_rect(rect, pixels.as_mut_ptr());
         // We need to manually adjust the vec length, otherwise
         // vec.len() will return 0 even though it is fully filled.
         pixels.set_len(buffer_size as usize);
@@ -213,28 +151,11 @@ pub fn get_pixel(x: u16, y: u16) -> Color {
 }
 
 pub fn set_pixel(x: u16, y: u16, color: Color) {
-    push_rect_uniform(Rect::new_pixel(x, y), color);
+    eadk::push_rect_uniform(Rect::new_pixel(x, y), color);
 }
 
 pub fn clear(color: Color) {
-    push_rect_uniform(Rect::SCREEN, color);
-}
-
-/// Draws a str to the screen.
-///
-/// It is your responsibility to end the str with a null byte.
-pub fn draw_raw_string(
-    text: *const u8,
-    x: u16,
-    y: u16,
-    large_font: bool,
-    text_color: Color,
-    background_color: Color,
-) {
-    let point = Point::new(x, y);
-    unsafe {
-        eadk_display_draw_string(text, point, large_font, text_color, background_color);
-    }
+    eadk::push_rect_uniform(Rect::SCREEN, color);
 }
 
 /// Draws a string, ensuring it ends correctly
@@ -247,7 +168,7 @@ pub fn draw_string(
     background_color: Color,
 ) {
     let patched_string = terminate_str(string);
-    draw_raw_string(
+    eadk::draw_string(
         patched_string.as_ptr(),
         x,
         y,
@@ -266,5 +187,94 @@ fn terminate_str(s: &str) -> Cow<'_, str> {
         owned.push_str(s);
         owned.push('\0');
         Cow::Owned(owned)
+    }
+}
+
+/// Interface with the raw `eadk` C api.
+///
+/// If you don't know what you are doing, use the safe rust implementations.
+pub mod eadk {
+    use super::{Color, Rect};
+
+    /// Pushes a slice of colors onto the screen.
+    ///
+    /// It is your responsibility to ensure that the rect and the slice's length match.
+    ///
+    /// The screen is filled from left to right then top to bottom.
+    pub fn push_rect(rect: Rect, pixels: &[Color]) {
+        unsafe {
+            eadk_display_push_rect(rect, pixels.as_ptr());
+        }
+    }
+
+    /// Draws a rect with the given color.
+    pub fn push_rect_uniform(rect: Rect, color: Color) {
+        unsafe {
+            eadk_display_push_rect_uniform(rect, color);
+        }
+    }
+
+    /// Pull pixels from the screen into a slice of colors.
+    ///
+    /// It is your responsibility to ensure that the rect and the slice's length match.
+    ///
+    /// The screen is filled from left to right then top to bottom.
+    pub fn pull_rect(rect: Rect, pixels: *mut Color) {
+        unsafe {
+            eadk_display_pull_rect(rect, pixels);
+        }
+    }
+
+    /// Waits for the screen to finish refreshing.
+    pub fn wait_for_vblank() {
+        unsafe {
+            eadk_display_wait_for_vblank();
+        }
+    }
+
+    /// Draws a str to the screen.
+    ///
+    /// It is your responsibility to end the str with a null byte.
+    pub fn draw_string(
+        text: *const u8,
+        x: u16,
+        y: u16,
+        large_font: bool,
+        text_color: Color,
+        background_color: Color,
+    ) {
+        let point = Point::new(x, y);
+        unsafe {
+            eadk_display_draw_string(text, point, large_font, text_color, background_color);
+        }
+    }
+
+    unsafe extern "C" {
+        fn eadk_display_push_rect(rect: Rect, pixels: *const Color);
+        fn eadk_display_push_rect_uniform(rect: Rect, color: Color);
+        fn eadk_display_pull_rect(rect: Rect, pixels: *mut Color);
+        fn eadk_display_wait_for_vblank() -> bool;
+        fn eadk_display_draw_string(
+            text: *const u8,
+            point: Point,
+            large_font: bool,
+            text_color: Color,
+            background_color: Color,
+        );
+    }
+
+    /// A point on the screen.
+    ///
+    /// This is only needed for the eadk_display_draw_string and should not be used elsewhere.
+    #[repr(C)]
+    pub struct Point {
+        pub x: u16,
+        pub y: u16,
+    }
+
+    impl Point {
+        pub fn new(x: u16, y: u16) -> Self {
+            Self { x, y }
+        }
     }
 }
