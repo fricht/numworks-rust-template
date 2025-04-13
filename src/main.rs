@@ -3,6 +3,7 @@
 #![feature(alloc_error_handler)]
 
 use libnw;
+use myapp::{self, ExitBehaviour};
 
 /// Defines the name of the application.
 #[used]
@@ -26,11 +27,14 @@ fn main() {
     libnw::init_heap!(1024);
 
     // Run the core of the app.
-    use myapp;
-    myapp::main();
-
-    // Hang when finished.
-    loop {}
+    let mut behaviour = ExitBehaviour::Restart;
+    while let ExitBehaviour::Restart = behaviour {
+        behaviour = myapp::main();
+    }
+    match behaviour {
+        ExitBehaviour::Hang => loop {},
+        _ => (),
+    }
 }
 
 /// Handlers for panic and allocation error
