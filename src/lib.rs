@@ -1,6 +1,10 @@
 #![no_std]
 
-use libnw::display::{self, CHAR_HEIGHT, Color, LARGE_CHAR_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH};
+extern crate alloc;
+
+use alloc::format;
+use libnw::display::{self, Color};
+use libnw::storage;
 
 /// How to handle the end of the main app.
 pub enum ExitBehaviour {
@@ -11,15 +15,31 @@ pub enum ExitBehaviour {
 
 /// The core of the application logic
 pub fn main() -> ExitBehaviour {
-    const MESSAGE: &str = "Hey !!";
     display::clear(Color::GREEN);
     display::draw_string(
-        MESSAGE,
-        (SCREEN_WIDTH - (MESSAGE.len() as u16 * LARGE_CHAR_WIDTH)) / 2,
-        (SCREEN_HEIGHT - CHAR_HEIGHT) / 2,
-        true,
+        &format!("Addr : {}", storage::extapp_address()),
+        0,
+        0,
+        false,
         Color::BLACK,
         Color::WHITE,
     );
+    display::draw_string(
+        &format!("U-Addr : {}", storage::extapp_userland_address() as u32),
+        0,
+        20,
+        false,
+        Color::BLACK,
+        Color::WHITE,
+    );
+    display::draw_string(
+        &format!("Size : {}", storage::extapp_size()),
+        0,
+        40,
+        false,
+        Color::BLACK,
+        Color::WHITE,
+    );
+
     ExitBehaviour::Hang
 }

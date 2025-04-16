@@ -24,7 +24,7 @@ fn main() {
     // THIS MUST BE THE FIRST THING
     // Or at least, the heap must have been initialized before
     // attempting to use any heap-allocated struct.
-    libnw::init_heap!(1024);
+    libnw::init_heap!(1024 * 64);
 
     // Run the core of the app.
     let mut behaviour = ExitBehaviour::Restart;

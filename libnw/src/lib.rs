@@ -34,3 +34,6 @@ pub mod keyboard;
 
 /// Access the external data of the app.
 pub mod external;
+
+/// Presistent storage.
+pub mod storage;
