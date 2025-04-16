@@ -1,3 +1,5 @@
+//! Day 13, you are now able to control the time.
+
 pub use eadk::*;
 
 /// Interface with the raw `eadk` C api.

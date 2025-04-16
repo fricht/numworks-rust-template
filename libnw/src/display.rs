@@ -1,3 +1,16 @@
+//! Interface with the display.
+//!
+//! This module offers high-level, safe access to screen rendering functionalities
+//! on the NumWorks calculator. It includes:
+//!
+//! - Pixel-level manipulation (`set_pixel`, `get_pixel`)
+//! - Rectangle drawing and filling (`Rect`)
+//! - Text rendering (`draw_string`)
+//! - RGB color handling with `Color`
+//!
+//! For low-level control, the internal `eadk` submodule exposes raw FFI bindings.
+//! Prefer using the safe API unless you have specific performance or control needs.
+
 extern crate alloc;
 
 use alloc::{borrow::Cow, string::String, vec::Vec};
@@ -28,6 +41,7 @@ pub struct Rect {
 }
 
 impl Rect {
+    /// Creates a new `Rect` from raw components.
     pub fn new(x: u16, y: u16, width: u16, height: u16) -> Self {
         Self {
             x,
@@ -37,14 +51,14 @@ impl Rect {
         }
     }
 
-    /// Creates a square
+    /// Creates a square.
     pub fn new_square(x: u16, y: u16, width: u16) -> Self {
         Self::new(x, y, width, width)
     }
 
-    /// Creates a square with side-length 1, i.e a pixel.
+    /// Creates a square with side-length 1, i.e, a pixel.
     pub fn new_pixel(x: u16, y: u16) -> Self {
-        Self::new(x, y, 1, 1)
+        Self::new_square(x, y, 1)
     }
 
     /// The number of pixels covered by the rectangle.
@@ -58,10 +72,13 @@ impl Rect {
     }
 
     /// Fills the rect on the screen with the given pixel colors.
+    ///
+    /// # Panics
+    /// Panics in debug builds if the slice length doesn't match the area of the rect.
+    /// In release builds, this won't be checked and may lead to visual bugs on the screen.
     pub fn fill_with_buf(self, pixels: &[Color]) {
-        // can we just return an Err and not draw the rect ?
-        // i think panicking is too much, isn't it ?
-        assert!(self.area() as usize == pixels.len());
+        // The user must ensure that the sizes match.
+        debug_assert!(self.area() as usize == pixels.len());
         unsafe {
             // SAFETY: we assert that the `pixels` slice's length
             // matches the area of the `self`.
@@ -100,10 +117,10 @@ impl Color {
         Self(rgb565)
     }
 
-    /// Creates a color from distincts red, green and blue channels.
+    /// Creates a color from distinct red, green and blue channels.
     ///
-    /// Each channel must be between 0 and 255, and is then converted
-    /// so the 3 channels can fit in a u16 (some precision is lost).
+    /// Converts 8-bit per channel RGB values into RGB565 format.
+    /// Precision is lost in the conversion: red and blue use 5 bits, green uses 6 bits.
     pub fn from_rgb(r: u8, g: u8, b: u8) -> Self {
         let r = (r & 0b11111000) as u16;
         let g = (g & 0b11111100) as u16;
@@ -112,7 +129,7 @@ impl Color {
     }
 
     /// Separates the color into 3 channels (0 to 255).
-    pub fn separate_channels(&self) -> (u8, u8, u8) {
+    pub fn separate_rgb(&self) -> (u8, u8, u8) {
         let mut r = ((self.0 >> 8) & 0b11111000) as u8;
         r = r | (r >> 5);
         let mut g = ((self.0 >> 3) & 0b11111100) as u8;
@@ -152,19 +169,26 @@ pub fn get_rect(rect: Rect) -> Vec<Color> {
     pixels
 }
 
+/// Retrieves the color of a pixel.
 pub fn get_pixel(x: u16, y: u16) -> Color {
-    get_rect(Rect::new_pixel(x, y))[0]
+    Rect::new_pixel(x, y).get_pixels()[0]
 }
 
+/// Colors a pixel.
 pub fn set_pixel(x: u16, y: u16, color: Color) {
-    eadk::push_rect_uniform(Rect::new_pixel(x, y), color);
+    Rect::new_pixel(x, y).fill(color);
 }
 
-pub fn clear(color: Color) {
-    eadk::push_rect_uniform(Rect::SCREEN, color);
+/// Fills the screen with the given color.
+pub fn clear_screen(color: Color) {
+    Rect::SCREEN.fill(color);
 }
 
-/// Draws a string
+/// Draws a string on screen.
+///
+/// The x and y coordinates corresponds to the top-left corner of the string's bounding-box.
+///
+/// Two font sizes are available and the choice is made using the `large_font` boolean parameter.
 pub fn draw_string(
     string: &str,
     x: u16,
@@ -207,7 +231,8 @@ pub mod eadk {
 
     /// Draws a str to the screen.
     ///
-    /// It is your responsibility to end the str with a null byte.
+    /// # Safety
+    /// It is your responsibility to ensure that the str is terminated with a null byte.
     pub unsafe fn draw_string(
         text: *const u8,
         x: u16,
@@ -238,17 +263,19 @@ pub mod eadk {
 
         /// Pushes a slice of colors onto the screen.
         ///
-        /// It is your responsibility to ensure that the rect and the slice's length match.
-        ///
         /// The screen is filled from left to right then top to bottom.
+        ///
+        /// # Safety
+        /// It is your responsibility to ensure that the rect and the slice's length match.
         #[link_name = "eadk_display_push_rect"]
         pub fn push_rect(rect: Rect, pixels: *const Color);
 
         /// Pull pixels from the screen into a slice of colors.
         ///
-        /// It is your responsibility to ensure that the rect and the slice's length match.
+        /// The screen is read from left to right then top to bottom.
         ///
-        /// The screen is filled from left to right then top to bottom.
+        /// # Safety
+        /// It is your responsibility to ensure that the rect and the slice's length match.
         #[link_name = "eadk_display_pull_rect"]
         pub fn pull_rect(rect: Rect, pixels: *mut Color);
 

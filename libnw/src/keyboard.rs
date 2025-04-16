@@ -1,3 +1,5 @@
+//! Interfaces with the keyboard, retrieve raw state and wait for keypress.
+
 extern crate alloc;
 
 use alloc::format;
@@ -189,6 +191,7 @@ pub enum Key {
 }
 
 impl Key {
+    /// Returns `true` if the key is a digit.
     pub fn is_digit(&self) -> bool {
         matches!(
             self,
@@ -204,6 +207,7 @@ impl Key {
         )
     }
 
+    /// Converts the key to its corresponding digit if applicable.
     pub fn to_digit(&self) -> Option<u8> {
         match self {
             Self::Zero => Some(0),
@@ -230,7 +234,15 @@ impl Display for Key {
 
 /// The state of the keyboard (pressed keys)
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct KeyboardState(pub u64);
+
+impl KeyboardState {
+    /// Checks if the given key was pressed in this state.
+    pub fn is_pressed(self, key: RawKey) -> bool {
+        eadk::keyboard_key_down(self, key)
+    }
+}
 
 pub use eadk::scan;
 
@@ -246,8 +258,7 @@ pub fn wait_for_input(timeout_ms: i32) -> Option<Key> {
 
 /// Checks if the given key is pressed.
 pub fn is_pressed(key: RawKey) -> bool {
-    let keyboard_state = eadk::scan();
-    eadk::keyboard_key_down(keyboard_state, key)
+    eadk::scan().is_pressed(key)
 }
 
 /// Retrieves the currently pressed key.

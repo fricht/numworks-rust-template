@@ -1,7 +1,23 @@
-/// Initialize the heap with the size passed as the first parameter.
+/// Initializes a global heap allocator using a statically allocated buffer.
 ///
-/// This macro must be called before attempting to
-/// use any heap-allocated struct.
+/// This macro sets up a global allocator using [`embedded_alloc::LlffHeap`],
+/// suitable for `no_std` embedded environments such as EADK apps.
+///
+/// You must call this macro **before using any heap-allocated types** like `Box`, `Vec`, etc.
+///
+/// # Example
+///
+/// ```rust
+/// init_heap!(1024); // Initializes a 1 KB heap
+/// ```
+///
+/// # Safety
+///
+/// This macro uses `unsafe` internally to initialize the heap. You must ensure that:
+///
+/// - The macro is only called once.
+/// - No heap allocations occur before it is called.
+/// - You use it in the `main()` function or at the very start of your app.
 #[macro_export]
 macro_rules! init_heap {
     ($size:expr) => {{
@@ -19,6 +35,7 @@ macro_rules! init_heap {
         static HEAP: Heap = Heap::empty();
 
         unsafe {
+            // SAFETY: the heap buffer is allocated with a size of `HEAP_SIZE`.
             HEAP.init(&raw mut HEAP_BUFFER as usize, HEAP_SIZE);
         }
     }};
