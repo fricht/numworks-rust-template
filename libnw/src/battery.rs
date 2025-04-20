@@ -1,38 +1,38 @@
-pub use eadk::is_charging;
-pub use eadk::level as get_level;
-pub use eadk::voltage as get_voltage;
+//! Interface with the battery
+//!
+//! Allows checking if the device is charging, as well as reading battery level and voltage.
+
+pub use eadk::*;
 
 /// Interface with the raw `eadk` C api.
 ///
 /// If you don't know what you are doing, use the safe rust implementations.
 pub mod eadk {
-    /// Checks if the battery is in charge.
-    ///
-    /// The link process will fail if the calculator is not compatible.
-    /// You may also need to increase the `EADK_API_LEVEL` for this to work.
-    pub fn is_charging() -> bool {
-        unsafe { eadk_battery_is_charging() }
-    }
-
-    /// Returns the battery level.
-    ///
-    /// The link process will fail if the calculator is not compatible.
-    /// You may also need to increase the `EADK_API_LEVEL` for this to work.
-    pub fn level() -> u8 {
-        unsafe { eadk_battery_level() }
-    }
-
-    /// Returns the battery voltage.
-    ///
-    /// The link process will fail if the calculator is not compatible.
-    /// You may also need to increase the `EADK_API_LEVEL` for this to work.
-    pub fn voltage() -> f32 {
-        unsafe { eadk_battery_voltage() }
-    }
-
     unsafe extern "C" {
-        fn eadk_battery_is_charging() -> bool;
-        fn eadk_battery_level() -> u8;
-        fn eadk_battery_voltage() -> f32;
+        /// Checks whether the battery is currently charging.
+        ///
+        /// # Link
+        /// This function may fail to link if the calculator is not compatible.
+        /// You may also need to increase the `EADK_API_LEVEL` for this to work.
+        #[link_name = "eadk_battery_is_charging"]
+        pub safe fn is_charging() -> bool;
+
+        // TODO: specify how the result should be interpreted (percentage, 0-100 or 0-1 ?).
+        /// Returns the battery level.
+        ///
+        /// # Link
+        /// This function may fail to link if the calculator is not compatible.
+        /// You may also need to increase the `EADK_API_LEVEL` for this to work.
+        #[link_name = "eadk_battery_level"]
+        pub safe fn get_level() -> u8;
+
+        // TODO: specify how the result should be interpreted.
+        /// Returns the battery voltage.
+        ///
+        /// # Link
+        /// This function may fail to link if the calculator is not compatible.
+        /// You may also need to increase the `EADK_API_LEVEL` for this to work.
+        #[link_name = "eadk_battery_voltage"]
+        pub safe fn get_voltage() -> f32;
     }
 }

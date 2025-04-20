@@ -1,7 +1,10 @@
+//! Interfaces with the keyboard, retrieve raw state and wait for keypress.
+
 extern crate alloc;
 
 use alloc::format;
 use core::fmt::Display;
+use core::mem;
 
 /// A hardware key
 #[repr(u8)]
@@ -189,6 +192,7 @@ pub enum Key {
 }
 
 impl Key {
+    /// Returns `true` if the key is a digit.
     pub fn is_digit(&self) -> bool {
         matches!(
             self,
@@ -204,6 +208,7 @@ impl Key {
         )
     }
 
+    /// Converts the key to its corresponding digit if applicable.
     pub fn to_digit(&self) -> Option<u8> {
         match self {
             Self::Zero => Some(0),
@@ -230,7 +235,15 @@ impl Display for Key {
 
 /// The state of the keyboard (pressed keys)
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct KeyboardState(pub u64);
+
+impl KeyboardState {
+    /// Checks if the given key was pressed in this state.
+    pub fn is_pressed(self, key: RawKey) -> bool {
+        eadk::keyboard_key_down(self, key)
+    }
+}
 
 pub use eadk::scan;
 
@@ -246,15 +259,58 @@ pub fn wait_for_input(timeout_ms: i32) -> Option<Key> {
 
 /// Checks if the given key is pressed.
 pub fn is_pressed(key: RawKey) -> bool {
-    let keyboard_state = eadk::scan();
-    eadk::keyboard_key_down(keyboard_state, key)
+    eadk::scan().is_pressed(key)
 }
 
 /// Retrieves the currently pressed key.
-/// 
+///
 /// This uses `eadk::event_get`, so it only detects new events.
 pub fn currently_pressed() -> Key {
     eadk::event_get(1)
+}
+
+/// Follow keyboard state through time.
+///
+/// Warning : having more than one instance of this
+/// or calling any `keyboard::scan()`-like method
+/// can break it (miss some events).
+pub struct KeyboardTimedState {
+    current_state: KeyboardState,
+    pressing_state: KeyboardState,
+    releasing_state: KeyboardState,
+}
+
+impl KeyboardTimedState {
+    /// Creates new instance.
+    pub fn new() -> Self {
+        Self {
+            current_state: KeyboardState(0),
+            pressing_state: KeyboardState(0),
+            releasing_state: KeyboardState(0),
+        }
+    }
+
+    /// Update the state (fetch new state / events).
+    pub fn fetch(&mut self) {
+        let previous_state = mem::replace(&mut self.current_state, scan());
+        self.pressing_state = KeyboardState((!previous_state.0) & self.current_state.0);
+        self.releasing_state = KeyboardState(previous_state.0 & (!self.current_state.0));
+    }
+
+    /// Checks if `key` is currently pressed.
+    pub fn is_key_pressed(&self, key: RawKey) -> bool {
+        eadk::keyboard_key_down(KeyboardState(self.current_state.0), key)
+    }
+
+    /// Checks if `key` is just pressed (is pressed now but not before).
+    pub fn is_key_just_pressed(&self, key: RawKey) -> bool {
+        eadk::keyboard_key_down(KeyboardState(self.pressing_state.0), key)
+    }
+
+    /// Checks if `key` is just released (not pressed now but was before).
+    pub fn is_key_just_released(&self, key: RawKey) -> bool {
+        eadk::keyboard_key_down(KeyboardState(self.releasing_state.0), key)
+    }
 }
 
 /// Interface with the raw `eadk` C api.
@@ -265,7 +321,7 @@ pub mod eadk {
 
     /// Retrieves the current state of the keyboard.
     pub fn scan() -> KeyboardState {
-        unsafe { KeyboardState(eadk_keyboard_scan()) }
+        KeyboardState(eadk_keyboard_scan())
     }
 
     /// Waits until a key (or combination of keys) is pressed,
@@ -277,7 +333,7 @@ pub mod eadk {
     pub fn event_get(timeout: i32) -> Key {
         // copy the value
         let mut timeout = timeout;
-        unsafe { eadk_event_get(&mut timeout as *mut _) }
+        eadk_event_get(&mut timeout as *mut _)
     }
 
     /// Checks if the key was pressed in the given state.
@@ -286,7 +342,7 @@ pub mod eadk {
     }
 
     unsafe extern "C" {
-        fn eadk_keyboard_scan() -> u64;
-        fn eadk_event_get(timeout: *mut i32) -> Key;
+        safe fn eadk_keyboard_scan() -> u64;
+        safe fn eadk_event_get(timeout: *mut i32) -> Key;
     }
 }

@@ -1,3 +1,5 @@
+//! Provides utility functions for generating random values such as integers, colors, and rectangles.
+
 use crate::display::{Color, Rect, SCREEN_HEIGHT, SCREEN_WIDTH};
 
 pub use eadk::random;
@@ -11,11 +13,15 @@ pub fn randuint(a: u32, b: u32) -> u32 {
 
 /// Returns a random color
 pub fn random_color() -> Color {
-    Color::from_rgb(eadk::random() as u8, eadk::random() as u8, eadk::random() as u8)
+    Color::from_rgb(
+        eadk::random() as u8,
+        eadk::random() as u8,
+        eadk::random() as u8,
+    )
 }
 
 /// Returns a random rect.
-/// The rect is fully contained in screen.
+/// The rect is fully contained within the screen.
 pub fn random_rect() -> Rect {
     let x = randuint(0, SCREEN_WIDTH as u32) as u16;
     let y = randuint(0, SCREEN_HEIGHT as u32) as u16;
@@ -28,12 +34,9 @@ pub fn random_rect() -> Rect {
 ///
 /// If you don't know what you are doing, use the safe rust implementations.
 pub mod eadk {
-    /// Returns a random u32.
-    pub fn random() -> u32 {
-        unsafe { eadk_random() }
-    }
-
     unsafe extern "C" {
-        fn eadk_random() -> u32;
+        /// Returns a random u32.
+        #[link_name = "eadk_random"]
+        pub safe fn random() -> u32;
     }
 }

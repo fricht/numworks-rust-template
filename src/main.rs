@@ -2,7 +2,6 @@
 #![no_main]
 #![feature(alloc_error_handler)]
 
-use libnw;
 use myapp::{self, ExitBehaviour};
 
 /// Defines the name of the application.
@@ -31,9 +30,8 @@ fn main() {
     while let ExitBehaviour::Restart = behaviour {
         behaviour = myapp::main();
     }
-    match behaviour {
-        ExitBehaviour::Hang => loop {},
-        _ => (),
+    if let ExitBehaviour::Hang = behaviour {
+        loop {}
     }
 }
 
@@ -47,7 +45,7 @@ mod no_std {
     /// This function is called when the application panics.
     #[panic_handler]
     fn panic(panic: &core::panic::PanicInfo<'_>) -> ! {
-        display::clear(Color::RED);
+        display::clear_screen(Color::RED);
         let error_msg = panic.message().as_str().unwrap_or("No panic message");
         render_error(error_msg);
         loop {}
@@ -56,7 +54,7 @@ mod no_std {
     /// This function is called when an allocation error occur.
     #[alloc_error_handler]
     fn alloc_error_handler(layout: core::alloc::Layout) -> ! {
-        display::clear(Color::RED);
+        display::clear_screen(Color::RED);
         let size_needed = layout.size();
         let error_msg = format!("Allocation error, {size_needed} bytes needed");
         render_error(&error_msg);
