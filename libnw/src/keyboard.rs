@@ -283,11 +283,15 @@ pub struct KeyboardTimedState {
 impl KeyboardTimedState {
     /// Creates new instance.
     pub fn new() -> Self {
-        Self {
+        let mut kbts = Self {
             current_state: KeyboardState(0),
             pressing_state: KeyboardState(0),
             releasing_state: KeyboardState(0),
-        }
+        };
+        // fetch 2 times to avoid unwanted keypress when launching app
+        kbts.fetch();
+        kbts.fetch();
+        kbts
     }
 
     /// Update the state (fetch new state / events).
