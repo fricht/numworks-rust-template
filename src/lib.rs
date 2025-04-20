@@ -12,7 +12,7 @@ pub enum ExitBehaviour {
 /// The core of the application logic
 pub fn main() -> ExitBehaviour {
     const MESSAGE: &str = "Hey !!";
-    display::clear(Color::GREEN);
+    display::clear_screen(Color::GREEN);
     display::draw_string(
         MESSAGE,
         (SCREEN_WIDTH - (MESSAGE.len() as u16 * LARGE_CHAR_WIDTH)) / 2,
