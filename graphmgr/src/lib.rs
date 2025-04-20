@@ -13,6 +13,7 @@ use libnw::keyboard::KeyboardTimedState;
 pub enum StackAction<M> {
     Pop(M),
     Push(Box<dyn State<M>>),
+    Replace(Box<dyn State<M>>),
     Nop,
 }
 
@@ -56,7 +57,17 @@ impl<M> StateManager<M> {
         poped_frame
     }
 
-    // -----
+    fn replace_top_stack(&mut self, mut state: Box<dyn State<M>>) -> Option<Box<dyn State<M>>> {
+        let mut poped_frame = self.stack.pop();
+        if let Some(f) = &mut poped_frame {
+            f.quit();
+        }
+        state.create();
+        self.stack.push(state);
+        poped_frame
+    }
+
+    // --------
 
     /// Here we go !!!\
     /// (with initial state)
@@ -70,8 +81,12 @@ impl<M> StateManager<M> {
                     self.pop_from_stack(msg);
                     continue;
                 }
-                StackAction::Push(frame) => {
-                    self.push_to_stack(frame);
+                StackAction::Push(state) => {
+                    self.push_to_stack(state);
+                    continue;
+                }
+                StackAction::Replace(state) => {
+                    self.replace_top_stack(state);
                     continue;
                 }
                 StackAction::Nop => (),
