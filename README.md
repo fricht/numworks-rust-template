@@ -6,6 +6,12 @@ A template with some tools to start creating your own rust [Numworks](https://ww
 
 Create a new repo using this template.
 
+You need to install a custom target, and enable nightly features.
+```bash
+rustup target add thumbv7em-none-eabihf
+rustup override set nightly
+```
+
 ### Method 1
 > More convenient but requires `npm`
 
