@@ -303,6 +303,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "graphmgr"
+version = "0.0.0"
+dependencies = [
+ "libnw",
+]
+
+[[package]]
 name = "half"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -502,6 +509,7 @@ name = "myapp"
 version = "0.0.0"
 dependencies = [
  "embedded-alloc",
+ "graphmgr",
  "libm",
  "libnw",
  "nwi_compress",

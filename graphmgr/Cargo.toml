@@ -1,0 +1,7 @@
+[package]
+name = "graphmgr"
+edition = "2024"
+description = "(Graphical) States manager, like android activities."
+
+[dependencies]
+libnw = { path = "../libnw" }

@@ -19,6 +19,7 @@ overflow-checks = false
 embedded-alloc = "0.6.0"
 libm = "0.2.11"
 libnw = { path = "libnw" }
+graphmgr = { path = "graphmgr" }
 
 # Misc
 
