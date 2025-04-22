@@ -10,7 +10,7 @@ use libnw::keyboard::KeyboardTimedState;
 /// `M` is a pop message (transferred to the state below).
 ///
 /// Should only be used with `StateManager`.
-pub enum StackAction<M> {
+pub enum StackAction<M = ()> {
     Pop(M),
     Push(Box<dyn State<M>>),
     Replace(Box<dyn State<M>>),
@@ -25,7 +25,7 @@ pub enum StackAction<M> {
 /// let mut state_mgr = StateManager::<()>::new();
 /// state_mgr.run(Box::new(MyState::new()));
 /// ```
-pub struct StateManager<M> {
+pub struct StateManager<M = ()> {
     stack: Vec<Box<dyn State<M>>>,
 }
 
@@ -96,7 +96,7 @@ impl<M> StateManager<M> {
     }
 }
 
-pub trait State<M> {
+pub trait State<M = ()> {
     /// called when adding state to stack
     fn create(&mut self) {}
     /// called when another state is pushed on top
