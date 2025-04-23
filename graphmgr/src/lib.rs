@@ -3,7 +3,7 @@
 extern crate alloc;
 
 use alloc::{boxed::Box, vec::Vec};
-use libnw::keyboard::KeyboardTimedState;
+use libnw::{keyboard::KeyboardTimedState, time};
 
 /// Represents an action to apply on the states stack.
 ///
@@ -39,20 +39,64 @@ impl<M> StateManager<M> {
 
     fn push_to_stack(&mut self, mut state: Box<dyn State<M>>) {
         if let Some(f) = self.stack.last_mut() {
-            f.pause();
+            match f.pause() {
+                StackAction::Pop(msg) => {
+                    self.pop_from_stack(msg);
+                }
+                StackAction::Push(state) => {
+                    self.push_to_stack(state);
+                }
+                StackAction::Replace(state) => {
+                    self.replace_top_stack(state);
+                }
+                StackAction::Nop => (),
+            }
         }
-        state.create();
+        match state.create() {
+            StackAction::Pop(msg) => {
+                self.pop_from_stack(msg);
+            }
+            StackAction::Push(state) => {
+                self.push_to_stack(state);
+            }
+            StackAction::Replace(state) => {
+                self.replace_top_stack(state);
+            }
+            StackAction::Nop => (),
+        }
         self.stack.push(state);
     }
 
     fn pop_from_stack(&mut self, msg: M) -> Option<Box<dyn State<M>>> {
         let mut poped_frame = self.stack.pop();
         match &mut poped_frame {
-            Some(f) => f.quit(),
+            Some(f) => match f.quit() {
+                StackAction::Pop(msg) => {
+                    self.pop_from_stack(msg);
+                }
+                StackAction::Push(state) => {
+                    self.push_to_stack(state);
+                }
+                StackAction::Replace(state) => {
+                    self.replace_top_stack(state);
+                }
+                StackAction::Nop => (),
+            },
             None => return None,
         }
         if let Some(f) = self.stack.last_mut() {
-            f.resume(msg);
+            match f.resume(msg) {
+                StackAction::Pop(msg) => {
+                    self.pop_from_stack(msg);
+                }
+                StackAction::Push(state) => {
+                    self.push_to_stack(state);
+                }
+                StackAction::Replace(state) => {
+                    self.replace_top_stack(state);
+                }
+                StackAction::Nop => (),
+            }
         }
         poped_frame
     }
@@ -60,9 +104,32 @@ impl<M> StateManager<M> {
     fn replace_top_stack(&mut self, mut state: Box<dyn State<M>>) -> Option<Box<dyn State<M>>> {
         let mut poped_frame = self.stack.pop();
         if let Some(f) = &mut poped_frame {
-            f.quit();
+            match f.quit() {
+                StackAction::Pop(msg) => {
+                    self.pop_from_stack(msg);
+                }
+                StackAction::Push(state) => {
+                    self.push_to_stack(state);
+                }
+                StackAction::Replace(state) => {
+                    self.replace_top_stack(state);
+                }
+                StackAction::Nop => (),
+            }
         }
-        state.create();
+
+        match state.create() {
+            StackAction::Pop(msg) => {
+                self.pop_from_stack(msg);
+            }
+            StackAction::Push(state) => {
+                self.push_to_stack(state);
+            }
+            StackAction::Replace(state) => {
+                self.replace_top_stack(state);
+            }
+            StackAction::Nop => (),
+        }
         self.stack.push(state);
         poped_frame
     }
@@ -71,9 +138,11 @@ impl<M> StateManager<M> {
 
     /// Here we go !!!\
     /// (with initial state)
-    pub fn run(&mut self, initial_state: Box<dyn State<M>>) {
+    pub fn run(&mut self, initial_state: Box<dyn State<M>>, fps: u64) {
+        let time_interval = 1000 / fps;
         let mut kb_handler = KeyboardTimedState::new();
         self.push_to_stack(initial_state);
+        let mut now = time::monotonic();
         while let Some(frame) = self.stack.last_mut() {
             kb_handler.fetch();
             match frame.update(&kb_handler) {
@@ -92,19 +161,33 @@ impl<M> StateManager<M> {
                 StackAction::Nop => (),
             }
             frame.render();
+            let new_now = time::monotonic();
+            let elapsed = new_now - now;
+            if elapsed < time_interval {
+                time::msleep((time_interval - elapsed) as u32);
+            }
+            now = time::monotonic();
         }
     }
 }
 
 pub trait State<M = ()> {
     /// called when adding state to stack
-    fn create(&mut self) {}
+    fn create(&mut self) -> StackAction<M> {
+        StackAction::Nop
+    }
     /// called when another state is pushed on top
-    fn pause(&mut self) {}
+    fn pause(&mut self) -> StackAction<M> {
+        StackAction::Nop
+    }
     /// called when state on top is poped
-    fn resume(&mut self, _pop_message: M) {}
+    fn resume(&mut self, _pop_message: M) -> StackAction<M> {
+        StackAction::Nop
+    }
     /// called when state is poped
-    fn quit(&mut self) {}
+    fn quit(&mut self) -> StackAction<M> {
+        StackAction::Nop
+    }
     /// when frame is active, called frequently\
     /// intended for logic update
     fn update(&mut self, keyboard_state: &KeyboardTimedState) -> StackAction<M>;
