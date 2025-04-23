@@ -54,8 +54,11 @@ impl State<()> for MainState {
 /// The core of the application logic
 pub fn main() -> ExitBehaviour {
     let mut state_mgr = StateManager::<()>::new();
-    state_mgr.run(Box::new(MainState {
-        msg: "Hey !!".to_string(),
-    }));
+    state_mgr.run(
+        Box::new(MainState {
+            msg: "Hey !!".to_string(),
+        }),
+        60,
+    );
     ExitBehaviour::Exit
 }
